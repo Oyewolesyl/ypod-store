@@ -4,6 +4,15 @@ import { useState } from "react";
 import type { Product } from "@/lib/shop/products";
 import { useCart } from "@/lib/shop/cart";
 
+const wrapClassNames: Record<string, string> = {
+  Minimal: "wrap-minimal",
+  "Calm Gradient": "wrap-gradient",
+  Abstract: "wrap-abstract",
+  Space: "wrap-space",
+  Nature: "wrap-nature",
+  "Custom Upload Coming Soon": "wrap-custom",
+};
+
 export function ProductCustomizer({
   product,
   onColorChange,
@@ -26,7 +35,7 @@ export function ProductCustomizer({
     <div className="customizer" aria-label={`${product.name} customizer`}>
       <p className="section-kicker">customize</p>
       <h2>make it yours.</h2>
-      <p>Choose the product color, wrap direction, and quantity. Material editing is prepared for the 3D model without depending on unknown GLB material names.</p>
+      <p>Choose the product color, skin pattern, and quantity. The selected setup is carried into the cart so the shopping flow remembers the build.</p>
 
       <div className="customizer-group">
         <label>color</label>
@@ -46,16 +55,17 @@ export function ProductCustomizer({
       </div>
 
       <div className="customizer-group">
-        <label>wrap style</label>
-        <div className="option-grid" role="list" aria-label="wrap styles">
+        <label>skin / wrap</label>
+        <div className="wrap-grid" role="list" aria-label="wrap styles">
           {product.wraps.map((option) => (
             <button
-              className={`option-pill ${wrap === option ? "active" : ""}`}
+              className={`wrap-card ${wrapClassNames[option] ?? "wrap-minimal"} ${wrap === option ? "active" : ""}`}
               key={option}
               type="button"
               onClick={() => setWrap(option)}
             >
-              {option}
+              <span aria-hidden="true" />
+              <strong>{option}</strong>
             </button>
           ))}
         </div>

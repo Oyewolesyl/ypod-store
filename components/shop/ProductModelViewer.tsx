@@ -44,7 +44,7 @@ function Model({ modelPath, color }: ProductModelViewerProps) {
   }, [color, scene]);
 
   return (
-    <Bounds fit clip observe margin={1.18}>
+    <Bounds fit clip observe margin={1.75}>
       <primitive object={scene as Group} />
     </Bounds>
   );
@@ -85,7 +85,7 @@ export function ProductModelViewer({ modelPath, color = "#111111" }: ProductMode
         <Suspense fallback={<div className="model-loading">loading 3D product</div>}>
           <Canvas
             shadows
-            camera={{ position: [2.8, 1.6, 4.2], fov: 36 }}
+            camera={{ position: [0.3, 1.1, 7.2], fov: 30 }}
             gl={{ antialias: true, alpha: true }}
             dpr={[1, 1.75]}
           >
@@ -94,17 +94,17 @@ export function ProductModelViewer({ modelPath, color = "#111111" }: ProductMode
             <directionalLight position={[4, 5, 3]} intensity={2.1} castShadow shadow-mapSize={[1024, 1024]} />
             <directionalLight position={[-3, 2, -4]} intensity={0.65} />
             <Environment preset="studio" />
-            <group position={[0, -0.08, 0]} rotation={[0, -0.28, 0]}>
+            <group position={[0, -0.04, 0]} rotation={[0.06, -0.1, 0]}>
               <Model modelPath={modelPath} color={color} />
             </group>
-            <ContactShadows position={[0, -1.08, 0]} opacity={0.38} scale={7} blur={2.8} far={3} />
+            <ContactShadows position={[0, -1.18, 0]} opacity={0.34} scale={8} blur={3.2} far={3.5} />
             <OrbitControls
               autoRotate={autoRotate}
               autoRotateSpeed={0.65}
               enablePan={false}
               enableZoom={false}
-              minDistance={2.2}
-              maxDistance={5.8}
+              minDistance={4.2}
+              maxDistance={8.5}
               minPolarAngle={Math.PI / 4}
               maxPolarAngle={Math.PI / 1.8}
             />

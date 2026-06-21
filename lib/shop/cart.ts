@@ -13,6 +13,7 @@ export type CartItem = {
   image: string;
   color: string;
   wrap: string;
+  wrapPreview?: string;
   quantity: number;
 };
 
@@ -20,6 +21,7 @@ type AddToCartInput = {
   product: Product;
   color: string;
   wrap: string;
+  wrapPreview?: string;
   quantity: number;
 };
 
@@ -45,8 +47,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [items],
   );
 
-  function addItem({ product, color, wrap, quantity }: AddToCartInput) {
-    const lineId = `${product.id}-${color}-${wrap}`;
+  function addItem({ product, color, wrap, wrapPreview, quantity }: AddToCartInput) {
+    const lineId = `${product.id}-${color}-${wrap}-${wrapPreview ?? "none"}`;
 
     setItems((current) => {
       const existing = current.find((item) => item.lineId === lineId);
@@ -68,6 +70,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           image: product.images[0],
           color,
           wrap,
+          wrapPreview,
           quantity,
         },
       ];

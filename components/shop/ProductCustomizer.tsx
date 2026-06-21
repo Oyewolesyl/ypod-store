@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/shop/products";
 import { useCart } from "@/lib/shop/cart";
 
@@ -11,24 +11,62 @@ const wrapClassNames: Record<string, string> = {
   Space: "wrap-space",
   Nature: "wrap-nature",
   "Custom Upload Coming Soon": "wrap-custom",
+  "Upload Your Image": "wrap-custom",
 };
+
+const printOptions = [
+  { name: "Kuromi Print", src: "/assets/prints/kuromi-print.png" },
+  { name: "John Cena Print", src: "/assets/prints/john-cena-print.png" },
+];
 
 export function ProductCustomizer({
   product,
   onColorChange,
+  onWrapTextureChange,
 }: {
   product: Product;
   onColorChange?: (color: string) => void;
+  onWrapTextureChange?: (textureUrl?: string) => void;
 }) {
   const [color, setColor] = useState(product.colors[0]?.name ?? "Midnight Black");
   const [wrap, setWrap] = useState(product.wraps[0] ?? "Minimal");
+  const [wrapPreview, setWrapPreview] = useState<string>();
+  const uploadedUrlRef = useRef<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+
+  useEffect(() => {
+    return () => {
+      if (uploadedUrlRef.current) {
+        URL.revokeObjectURL(uploadedUrlRef.current);
+      }
+    };
+  }, []);
 
   function selectColor(nextColor: string) {
     setColor(nextColor);
     const colorValue = product.colors.find((option) => option.name === nextColor)?.value;
     onColorChange?.(colorValue ?? "#111111");
+  }
+
+  function selectWrap(nextWrap: string, preview?: string) {
+    setWrap(nextWrap);
+    setWrapPreview(preview);
+    onWrapTextureChange?.(preview);
+  }
+
+  function handleUpload(file?: File) {
+    if (!file) {
+      return;
+    }
+
+    if (uploadedUrlRef.current) {
+      URL.revokeObjectURL(uploadedUrlRef.current);
+    }
+
+    const nextPreview = URL.createObjectURL(file);
+    uploadedUrlRef.current = nextPreview;
+    selectWrap("Custom Upload", nextPreview);
   }
 
   return (
@@ -62,13 +100,36 @@ export function ProductCustomizer({
               className={`wrap-card ${wrapClassNames[option] ?? "wrap-minimal"} ${wrap === option ? "active" : ""}`}
               key={option}
               type="button"
-              onClick={() => setWrap(option)}
+              onClick={() => selectWrap(option)}
             >
               <span aria-hidden="true" />
               <strong>{option}</strong>
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="customizer-group">
+        <label>print options</label>
+        <div className="print-grid" role="list" aria-label="print options">
+          {printOptions.map((option) => (
+            <button
+              className={`print-card ${wrap === option.name ? "active" : ""}`}
+              key={option.name}
+              type="button"
+              onClick={() => selectWrap(option.name, option.src)}
+            >
+              <img src={option.src} alt={`${option.name} controller skin print`} />
+              <strong>{option.name}</strong>
+            </button>
+          ))}
+          <label className={`print-card upload-card ${wrap === "Custom Upload" ? "active" : ""}`}>
+            <input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
+            <span>{wrapPreview && wrap === "Custom Upload" ? <img src={wrapPreview} alt="uploaded custom print preview" /> : null}</span>
+            <strong>Upload your image</strong>
+          </label>
+        </div>
+        <p className="customizer-note">Selected prints update the controller preview and cart item.</p>
       </div>
 
       <div className="customizer-group quantity-row">
@@ -85,7 +146,7 @@ export function ProductCustomizer({
       </div>
 
       <div className="shop-actions">
-        <button className="shop-button" type="button" onClick={() => addItem({ product, color, wrap, quantity })}>
+        <button className="shop-button" type="button" onClick={() => addItem({ product, color, wrap, wrapPreview, quantity })}>
           Add to cart
         </button>
       </div>

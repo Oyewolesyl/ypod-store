@@ -31,6 +31,9 @@ export function CartDrawer() {
                   <p>
                     {item.color} / {item.wrap}
                   </p>
+                  {item.wrapPreview ? (
+                    <img className="cart-wrap-preview" src={item.wrapPreview} alt={`${item.wrap} selected print`} />
+                  ) : null}
                   <p>{item.price}</p>
                   <div className="cart-line-actions">
                     <div className="quantity-control">

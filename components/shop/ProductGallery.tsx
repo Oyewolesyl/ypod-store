@@ -1,11 +1,19 @@
 import type { Product } from "@/lib/shop/products";
 import { ProductModelViewer } from "./ProductModelViewer";
 
-export function ProductGallery({ product, selectedColor }: { product: Product; selectedColor?: string }) {
+export function ProductGallery({
+  product,
+  selectedColor,
+  wrapTextureUrl,
+}: {
+  product: Product;
+  selectedColor?: string;
+  wrapTextureUrl?: string;
+}) {
   if (product.modelPath) {
     return (
       <div className="model-gallery-wrap">
-        <ProductModelViewer modelPath={product.modelPath} color={selectedColor} />
+        <ProductModelViewer modelPath={product.modelPath} color={selectedColor} wrapTextureUrl={wrapTextureUrl} />
         <div className="model-gallery-cutouts" aria-label={`${product.name} product cutouts`}>
           {product.images.slice(0, 2).map((image, index) => (
             <img src={image} alt={`${product.name} cutout ${index + 1}`} key={image} />

@@ -35,7 +35,7 @@ export const wrapOptions = [
   "Abstract",
   "Space",
   "Nature",
-  "Custom Upload Coming Soon",
+  "Upload Your Image",
 ];
 
 export const products: Product[] = [
@@ -217,12 +217,12 @@ export const products: Product[] = [
     images: ["/assets/nobg/kuromi-wrapped-controller-nobg.png", "/assets/remote/ypod-remote-showcase.png", "/assets/remote/ypod-remote-system.png"],
     colors: colorOptions,
     wraps: wrapOptions,
-    features: ["Collectible designs", "Brand partnership potential", "Remote skin support", "Future custom upload flow"],
+    features: ["Collectible designs", "Brand partnership potential", "Remote skin support", "Customer upload flow"],
     specs: {
       surface: "remote-first wrap concept",
       formats: "minimal, gradient, abstract, space, nature",
       launch: "small-batch drops",
-      future: "custom upload workflow",
+      custom: "upload an image for a controller skin preview",
     },
     whatsInTheBox: ["Selected wrap", "Application card", "Cleaning cloth"],
     faqs: [
@@ -232,7 +232,7 @@ export const products: Product[] = [
       },
       {
         question: "Can customers upload designs?",
-        answer: "Custom upload is planned as a future feature after the base wrap system is validated.",
+        answer: "Yes. Customers can upload an image in the shop customizer and preview it against the controller model.",
       },
     ],
   },

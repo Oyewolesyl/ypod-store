@@ -10,13 +10,14 @@ import { ShopNav } from "./ShopNav";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const [selectedColor, setSelectedColor] = useState(product.colors[0]?.value ?? "#111111");
+  const [wrapTextureUrl, setWrapTextureUrl] = useState<string>();
 
   return (
     <main className="shop-shell product-detail">
       <ShopNav />
       <section className="product-detail-hero">
         <div>
-          <ProductGallery product={product} selectedColor={selectedColor} />
+          <ProductGallery product={product} selectedColor={selectedColor} wrapTextureUrl={wrapTextureUrl} />
         </div>
 
         <div className="product-summary">
@@ -24,7 +25,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <h1>{product.name}</h1>
           <p>{product.description}</p>
           <p className="shop-price">{product.price}</p>
-          <ProductCustomizer product={product} onColorChange={setSelectedColor} />
+          <ProductCustomizer product={product} onColorChange={setSelectedColor} onWrapTextureChange={setWrapTextureUrl} />
         </div>
       </section>
 

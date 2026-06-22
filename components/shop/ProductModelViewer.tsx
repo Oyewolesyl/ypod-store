@@ -228,6 +228,12 @@ export function ProductModelViewer({ modelPath, color = "#111111", wrapTextureUr
       <button className="shop-button model-toggle" type="button" onClick={() => setAutoRotate((value) => !value)}>
         {autoRotate ? "pause rotation" : "auto rotate"}
       </button>
+      {wrapTextureUrl ? (
+        <div className="model-skin-preview" aria-label="selected controller skin preview">
+          <span>skin applied</span>
+          <img src={wrapTextureUrl} alt="selected controller wrap texture" />
+        </div>
+      ) : null}
     </div>
   );
 }

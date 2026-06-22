@@ -15,7 +15,7 @@ export function ShopNav() {
       <nav className="shop-nav-links" aria-label="shop navigation">
         <a href="https://ypod.vercel.app">home</a>
         <Link href="/">shop</Link>
-        <Link href="/shop/ypod-remote">3d remote</Link>
+        <Link href="/shop/ypod-remote">customize</Link>
         <button className="cart-icon-button" type="button" onClick={openCart} aria-label={`open cart with ${count} items`}>
           <span aria-hidden="true">bag</span>
           {count > 0 ? <strong>{count}</strong> : null}

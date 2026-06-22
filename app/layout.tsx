@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ypod | in my dream",
-  description: "Personalized sleep audio, earbuds, remote controls, and custom wraps.",
+  description: "personalized sleep audio, earbuds, remote controls, and custom wraps.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

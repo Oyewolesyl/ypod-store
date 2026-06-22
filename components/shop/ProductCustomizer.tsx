@@ -5,18 +5,12 @@ import type { Product } from "@/lib/shop/products";
 import { useCart } from "@/lib/shop/cart";
 
 const wrapClassNames: Record<string, string> = {
-  Minimal: "wrap-minimal",
-  "Calm Gradient": "wrap-gradient",
-  Abstract: "wrap-abstract",
-  Space: "wrap-space",
-  Nature: "wrap-nature",
-  "Custom Upload Coming Soon": "wrap-custom",
-  "Upload Your Image": "wrap-custom",
+  "matte black": "wrap-minimal",
 };
 
 const printOptions = [
-  { name: "Kuromi Print", src: "/assets/prints/kuromi-print.png" },
-  { name: "John Cena Print", src: "/assets/prints/john-cena-print.png" },
+  { name: "kuromi print", src: "/assets/prints/kuromi-print.png" },
+  { name: "john cena print", src: "/assets/prints/john-cena-print.png" },
 ];
 
 export function ProductCustomizer({
@@ -28,12 +22,14 @@ export function ProductCustomizer({
   onColorChange?: (color: string) => void;
   onWrapTextureChange?: (textureUrl?: string) => void;
 }) {
-  const [color, setColor] = useState(product.colors[0]?.name ?? "Midnight Black");
-  const [wrap, setWrap] = useState(product.wraps[0] ?? "Minimal");
+  const [color, setColor] = useState(product.colors[0]?.name ?? "midnight black");
+  const [wrap, setWrap] = useState(product.customizable ? product.wraps[0] ?? "matte black" : "none");
   const [wrapPreview, setWrapPreview] = useState<string>();
   const uploadedUrlRef = useRef<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+  const isController = product.customizable;
+  const canChooseWrap = isController;
 
   useEffect(() => {
     return () => {
@@ -66,14 +62,18 @@ export function ProductCustomizer({
 
     const nextPreview = URL.createObjectURL(file);
     uploadedUrlRef.current = nextPreview;
-    selectWrap("Custom Upload", nextPreview);
+    selectWrap("custom upload", nextPreview);
   }
 
   return (
     <div className="customizer" aria-label={`${product.name} customizer`}>
-      <p className="section-kicker">customize</p>
-      <h2>make it yours.</h2>
-      <p>Choose the product color, skin pattern, and quantity. The selected setup is carried into the cart so the shopping flow remembers the build.</p>
+      <p className="section-kicker">{isController ? "controller customizer" : "buy"}</p>
+      <h2>{isController ? "customize your ypod remote" : "add to cart"}</h2>
+      <p>
+        {isController
+          ? "choose matte black, apply kuromi or john cena print, or upload your own image. the 3d controller updates before you add it to cart."
+          : "choose color, quantity, and add it to cart."}
+      </p>
 
       <div className="customizer-group">
         <label>color</label>
@@ -92,45 +92,51 @@ export function ProductCustomizer({
         </div>
       </div>
 
-      <div className="customizer-group">
-        <label>skin / wrap</label>
-        <div className="wrap-grid" role="list" aria-label="wrap styles">
-          {product.wraps.map((option) => (
-            <button
-              className={`wrap-card ${wrapClassNames[option] ?? "wrap-minimal"} ${wrap === option ? "active" : ""}`}
-              key={option}
-              type="button"
-              onClick={() => selectWrap(option)}
-            >
-              <span aria-hidden="true" />
-              <strong>{option}</strong>
-            </button>
-          ))}
-        </div>
-      </div>
+      {canChooseWrap ? (
+        <>
+          <div className="customizer-group">
+            <label>base finish</label>
+            <div className="wrap-grid" role="list" aria-label="wrap styles">
+              {product.wraps.map((option) => (
+                <button
+                  className={`wrap-card ${wrapClassNames[option] ?? "wrap-minimal"} ${wrap === option ? "active" : ""}`}
+                  key={option}
+                  type="button"
+                  onClick={() => selectWrap(option)}
+                >
+                  <span aria-hidden="true" />
+                  <strong>{option}</strong>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="customizer-group">
-        <label>print options</label>
-        <div className="print-grid" role="list" aria-label="print options">
-          {printOptions.map((option) => (
-            <button
-              className={`print-card ${wrap === option.name ? "active" : ""}`}
-              key={option.name}
-              type="button"
-              onClick={() => selectWrap(option.name, option.src)}
-            >
-              <img src={option.src} alt={`${option.name} controller skin print`} />
-              <strong>{option.name}</strong>
-            </button>
-          ))}
-          <label className={`print-card upload-card ${wrap === "Custom Upload" ? "active" : ""}`}>
-            <input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
-            <span>{wrapPreview && wrap === "Custom Upload" ? <img src={wrapPreview} alt="uploaded custom print preview" /> : null}</span>
-            <strong>Upload your image</strong>
-          </label>
-        </div>
-        <p className="customizer-note">Selected prints update the controller preview and cart item.</p>
-      </div>
+          <div className="customizer-group">
+            <label>skin print</label>
+            <div className="print-grid" role="list" aria-label="print options">
+              {printOptions.map((option) => (
+                <button
+                  className={`print-card ${wrap === option.name ? "active" : ""}`}
+                  key={option.name}
+                  type="button"
+                  onClick={() => selectWrap(option.name, option.src)}
+                >
+                  <img src={option.src} alt={`${option.name} controller skin print`} />
+                  <strong>{option.name}</strong>
+                </button>
+              ))}
+              <label className={`print-card upload-card ${wrap === "custom upload" ? "active" : ""}`}>
+                <input type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files?.[0])} />
+                <span>{wrapPreview && wrap === "custom upload" ? <img src={wrapPreview} alt="uploaded custom print preview" /> : null}</span>
+                <strong>upload your image</strong>
+              </label>
+            </div>
+            <p className="customizer-note">
+              selected prints update the 3d controller preview and cart item.
+            </p>
+          </div>
+        </>
+      ) : null}
 
       <div className="customizer-group quantity-row">
         <label>quantity</label>
@@ -147,7 +153,7 @@ export function ProductCustomizer({
 
       <div className="shop-actions">
         <button className="shop-button" type="button" onClick={() => addItem({ product, color, wrap, wrapPreview, quantity })}>
-          Add to cart
+          add to cart
         </button>
       </div>
     </div>

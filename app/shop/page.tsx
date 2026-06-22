@@ -2,6 +2,7 @@ import { CartDrawer } from "@/components/shop/CartDrawer";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ShopHero } from "@/components/shop/ShopHero";
 import { ShopNav } from "@/components/shop/ShopNav";
+import { WaitlistForm } from "@/components/shop/WaitlistForm";
 import { products } from "@/lib/shop/products";
 
 export default function ShopPage() {
@@ -12,8 +13,10 @@ export default function ShopPage() {
         <ShopHero />
 
         <section id="products" className="shop-section">
+          <img className="shop-drift shop-drift-one" src="/assets/nobg/yema-1-left-ear-nobg.png" alt="" aria-hidden="true" />
+          <img className="shop-drift shop-drift-two" src="/assets/nobg/black-controller-nobg.png" alt="" aria-hidden="true" />
           <p className="section-kicker">products</p>
-          <h2>sleep audio, bedside control, and customization in one system.</h2>
+          <h2>sleep audio, bedside control, and remote customization in one system.</h2>
           <div className="shop-grid">
             {products.map((product) => (
               <ProductCard product={product} key={product.id} />
@@ -23,65 +26,64 @@ export default function ShopPage() {
 
         <section className="shop-section custom-teaser" aria-labelledby="customization-title">
           <div>
-            <p className="section-kicker">customization</p>
-            <h2 id="customization-title">Make it yours.</h2>
-            <p>Choose colors, wraps, and personal design options built for your sleep setup.</p>
+            <p className="section-kicker">remote controller</p>
+            <h2 id="customization-title">customize your ypod remote</h2>
+            <p>choose matte black, select a print, or upload your own image on the controller page. earbuds stay simple. remote gets the studio.</p>
             <div className="shop-actions">
-              <a className="shop-button" href="/shop/custom-wraps">
-                Customize YPOD
+              <a className="shop-button" href="/shop/ypod-remote">
+                open controller studio
               </a>
             </div>
           </div>
-          <div className="custom-swatches" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+          <div className="custom-remote-stack" aria-hidden="true">
+            <img src="/assets/nobg/black-controller-nobg.png" alt="" />
+            <img src="/assets/nobg/kuromi-wrapped-controller-nobg.png" alt="" />
           </div>
         </section>
 
         <section className="shop-section feature-strip" aria-label="shop feature strip">
           <article>
             <p className="section-kicker">sleep</p>
-            <h3>Designed for sleep</h3>
+            <h3>designed for sleep</h3>
           </article>
           <article>
             <p className="section-kicker">wraps</p>
-            <h3>Personalized wraps</h3>
+            <h3>remote skins</h3>
           </article>
           <article>
             <p className="section-kicker">fit</p>
-            <h3>Premium comfort</h3>
+            <h3>premium comfort</h3>
           </article>
           <article>
             <p className="section-kicker">remote</p>
-            <h3>Calm bedside control</h3>
+            <h3>calm bedside control</h3>
           </article>
         </section>
 
         <section className="shop-section payment-section" aria-labelledby="payment-title">
           <div>
-            <p className="section-kicker">checkout direction</p>
-            <h2 id="payment-title">secure, simple, ready for global buyers.</h2>
+            <p className="section-kicker">preorder</p>
+            <h2 id="payment-title">reserve the system before checkout goes live.</h2>
             <p>
-              The store is structured so checkout can grow into card payment, bank transfer,
-              and wallet-based payment without rebuilding the shopping experience.
+              collect real preorder interest now. wallet payment is prepared, but guarded until the receiving wallet and launch terms are configured.
             </p>
+            <WaitlistForm />
           </div>
           <div className="payment-grid">
             <article>
               <span>01</span>
-              <h3>card and transfer</h3>
-              <p>Practical local checkout first: card, bank transfer, order confirmation, shipping, and support.</p>
+              <h3>email preorder</h3>
+              <p>reserve interest from the cart or waitlist without forcing payment before inventory is ready.</p>
             </article>
             <article>
               <span>02</span>
-              <h3>wallet payment layer</h3>
-              <p>WalletConnect or stablecoin checkout can be added once compliance, refunds, and accounting are ready.</p>
+              <h3>wallet layer</h3>
+              <p>web3 preorder is wired for wallet connection and can be activated with a configured receiving wallet.</p>
             </article>
             <article>
               <span>03</span>
-              <h3>safe release path</h3>
-              <p>No live payment is collected until pricing, inventory, tax, shipping, returns, and customer support are locked.</p>
+              <h3>safe launch</h3>
+              <p>payments stay controlled until pricing, shipping, refunds, support, and compliance are locked.</p>
             </article>
           </div>
         </section>

@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { Product } from "@/lib/shop/products";
 
 export function ProductCard({ product }: { product: Product }) {
+  const isRemote = product.id === "remote";
+
   return (
-    <Link className="product-card" href={`/shop/${product.slug}`}>
+    <Link className={`product-card ${isRemote ? "product-card-featured" : ""}`} href={`/shop/${product.slug}`}>
       <div className="product-card-media">
         <img src={product.images[0]} alt={`${product.name} product render`} />
         {product.images[1] ? <img className="product-card-orbit" src={product.images[1]} alt="" aria-hidden="true" /> : null}
@@ -16,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="product-card-footer">
           <span className="shop-price">{product.price}</span>
-          <span>view</span>
+          <span>{isRemote ? "customize" : "view"}</span>
         </div>
       </div>
     </Link>

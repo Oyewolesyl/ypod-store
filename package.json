@@ -10,6 +10,7 @@
   "dependencies": {
     "@react-three/drei": "latest",
     "@react-three/fiber": "latest",
+    "@supabase/supabase-js": "^2.108.2",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",

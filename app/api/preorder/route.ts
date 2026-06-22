@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { products } from "@/lib/shop/products";
 
 type PreorderItem = {
   productId: string;
@@ -11,6 +12,8 @@ type PreorderItem = {
 };
 
 function cleanItems(items: PreorderItem[]) {
+  const productPriceMap = new Map(products.map((product) => [product.id, product.priceValue]));
+
   return items
     .filter((item) => item?.productId && item?.name && Number.isFinite(item.quantity) && item.quantity > 0)
     .map((item) => ({
@@ -19,7 +22,7 @@ function cleanItems(items: PreorderItem[]) {
       color: item.color?.toLowerCase() ?? null,
       wrap: item.wrap?.toLowerCase() ?? null,
       quantity: Math.max(1, Math.floor(item.quantity)),
-      price_value: Number.isFinite(item.priceValue) ? Math.max(0, Math.floor(item.priceValue)) : 0,
+      price_value: productPriceMap.get(item.productId) ?? 0,
     }));
 }
 
@@ -28,7 +31,8 @@ export async function POST(request: Request) {
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const rawItems = Array.isArray(body?.items) ? (body.items as PreorderItem[]) : [];
   const items = cleanItems(rawItems);
-  const subtotal = typeof body?.subtotal === "number" ? Math.max(0, Math.floor(body.subtotal)) : 0;
+  const submittedSubtotal = typeof body?.subtotal === "number" ? Math.max(0, Math.floor(body.subtotal)) : 0;
+  const subtotal = items.reduce((total, item) => total + item.price_value * item.quantity, 0);
   const walletAddress = typeof body?.walletAddress === "string" && body.walletAddress.trim() ? body.walletAddress.trim() : null;
   const txHash = typeof body?.txHash === "string" && body.txHash.trim() ? body.txHash.trim() : null;
   const paymentWallet = typeof body?.paymentWallet === "string" && body.paymentWallet.trim() ? body.paymentWallet.trim() : null;
@@ -42,7 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "enter a valid email." }, { status: 400 });
   }
 
-  if (!items.length || subtotal <= 0) {
+  if (!items.length || subtotal <= 0 || submittedSubtotal <= 0) {
     return NextResponse.json({ message: "add a product before reserving preorder." }, { status: 400 });
   }
 

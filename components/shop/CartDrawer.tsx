@@ -12,17 +12,19 @@ declare global {
 }
 
 const preorderWallet = process.env.NEXT_PUBLIC_PREORDER_WALLET ?? "0x5B014E95ebA24F348528cBF8eE680f95a94cb64E";
-const preorderPaymentWei = process.env.NEXT_PUBLIC_PREORDER_PAYMENT_WEI ?? "";
 const preorderChainId = process.env.NEXT_PUBLIC_PREORDER_CHAIN_ID ?? "0x1";
 const preorderChainName = process.env.NEXT_PUBLIC_PREORDER_CHAIN_NAME ?? "ethereum";
 const usdtWallet = process.env.NEXT_PUBLIC_USDT_WALLET ?? preorderWallet;
 const usdtContract = process.env.NEXT_PUBLIC_USDT_CONTRACT ?? "0xdAC17F958D2ee523a2206206994597C13D831ec7";
-const usdtAmountUnits = process.env.NEXT_PUBLIC_USDT_PREORDER_AMOUNT_UNITS ?? "";
 const usdtChainId = process.env.NEXT_PUBLIC_USDT_CHAIN_ID ?? "0x1";
 const btcWallet = process.env.NEXT_PUBLIC_BTC_WALLET ?? "bc1qun3s0pw5r3cura2fls04rex95jlcr88drz5rre";
 const bankName = process.env.NEXT_PUBLIC_BANK_NAME ?? "";
 const bankAccountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "";
 const bankAccountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? "";
+const preorderPaymentMode = process.env.NEXT_PUBLIC_PREORDER_PAYMENT_MODE ?? "full";
+const preorderDepositNaira = Number(process.env.NEXT_PUBLIC_PREORDER_DEPOSIT_NAIRA ?? "0");
+const nairaPerEth = Number(process.env.NEXT_PUBLIC_NAIRA_PER_ETH ?? "0");
+const nairaPerUsdt = Number(process.env.NEXT_PUBLIC_NAIRA_PER_USDT ?? "0");
 
 function isValidHexAddress(value: string) {
   return /^0x[a-fA-F0-9]{40}$/.test(value);
@@ -30,6 +32,15 @@ function isValidHexAddress(value: string) {
 
 function toHexQuantity(value: string) {
   return value.startsWith("0x") ? value : `0x${BigInt(value).toString(16)}`;
+}
+
+function toTokenUnits(amountNaira: number, nairaPerToken: number, decimals: number) {
+  if (!Number.isFinite(amountNaira) || amountNaira <= 0 || !Number.isFinite(nairaPerToken) || nairaPerToken <= 0) {
+    return "";
+  }
+
+  const tokenAmount = amountNaira / nairaPerToken;
+  return BigInt(Math.ceil(tokenAmount * 10 ** decimals)).toString();
 }
 
 function encodeErc20Transfer(to: string, amountUnits: string) {
@@ -60,6 +71,17 @@ export function CartDrawer() {
       })),
     [items],
   );
+
+  const preorderAmountNaira = useMemo(() => {
+    if (preorderPaymentMode === "deposit" && Number.isFinite(preorderDepositNaira) && preorderDepositNaira > 0) {
+      return Math.min(subtotal, preorderDepositNaira);
+    }
+
+    return subtotal;
+  }, [subtotal]);
+
+  const ethAmountWei = useMemo(() => toTokenUnits(preorderAmountNaira, nairaPerEth, 18), [preorderAmountNaira]);
+  const usdtAmountUnits = useMemo(() => toTokenUnits(preorderAmountNaira, nairaPerUsdt, 6), [preorderAmountNaira]);
 
   if (!isOpen) {
     return null;
@@ -170,9 +192,9 @@ export function CartDrawer() {
       return;
     }
 
-    if (!preorderPaymentWei || !/^0x[0-9a-fA-F]+$|^[0-9]+$/.test(preorderPaymentWei)) {
+    if (!ethAmountWei) {
       setStatus("error");
-      setMessage("add NEXT_PUBLIC_PREORDER_PAYMENT_WEI in vercel before taking eth payments.");
+      setMessage("add NEXT_PUBLIC_NAIRA_PER_ETH in vercel before taking eth payments.");
       return;
     }
 
@@ -184,7 +206,7 @@ export function CartDrawer() {
         throw new Error("wallet not found.");
       }
 
-      const value = toHexQuantity(preorderPaymentWei);
+      const value = toHexQuantity(ethAmountWei);
       const txHash = (await ethereum.request({
         method: "eth_sendTransaction",
         params: [
@@ -199,7 +221,7 @@ export function CartDrawer() {
       await reservePreorder({
         txHash,
         paymentWallet: preorderWallet,
-        paymentAmountWei: preorderPaymentWei,
+        paymentAmountWei: ethAmountWei,
         paymentChainId: preorderChainId || "wallet default",
         paymentMethod: `native wallet payment on ${preorderChainName}`,
         paymentAsset: "eth",
@@ -221,9 +243,9 @@ export function CartDrawer() {
       return;
     }
 
-    if (!usdtAmountUnits || !/^[0-9]+$/.test(usdtAmountUnits)) {
+    if (!usdtAmountUnits) {
       setStatus("error");
-      setMessage("add NEXT_PUBLIC_USDT_PREORDER_AMOUNT_UNITS before taking usdt payments.");
+      setMessage("add NEXT_PUBLIC_NAIRA_PER_USDT before taking usdt payments.");
       return;
     }
 
@@ -322,7 +344,8 @@ export function CartDrawer() {
 
     await reservePreorder({
       txHash: bankReference.trim(),
-      paymentWallet: `${bankName} / ${bankAccountNumber}`,
+          paymentWallet: `${bankName} / ${bankAccountNumber}`,
+      paymentAmountUnits: preorderAmountNaira.toString(),
       paymentChainId: "bank",
       paymentMethod: "bank transfer",
       paymentAsset: "bank_transfer",
@@ -376,7 +399,25 @@ export function CartDrawer() {
 
         <div className="cart-footer">
           <div className="subtotal-row">
-            <span>subtotal</span>
+            <span>{preorderPaymentMode === "deposit" ? "deposit due" : "subtotal"}</span>
+            <span>{formatNaira(preorderAmountNaira)}</span>
+          </div>
+          {preorderPaymentMode === "deposit" ? (
+            <div className="subtotal-row secondary-row">
+              <span>cart total</span>
+              <span>{formatNaira(subtotal)}</span>
+            </div>
+          ) : null}
+          <div className="subtotal-row secondary-row">
+            <span>eth estimate</span>
+            <span>{ethAmountWei ? `${ethAmountWei} wei` : "rate needed"}</span>
+          </div>
+          <div className="subtotal-row secondary-row">
+            <span>usdt estimate</span>
+            <span>{usdtAmountUnits ? `${usdtAmountUnits} units` : "rate needed"}</span>
+          </div>
+          <div className="subtotal-row secondary-row">
+            <span>cart total</span>
             <span>{formatNaira(subtotal)}</span>
           </div>
           <label className="checkout-field">

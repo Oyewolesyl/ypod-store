@@ -625,9 +625,10 @@ select {
 .gallery-card {
   min-height: 260px;
   overflow: hidden;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 30px;
-  background: white;
+  background: #0d0d0d;
+  color: white;
 }
 
 .gallery-card img {
@@ -673,11 +674,12 @@ select {
 .customizer {
   margin-top: 28px;
   padding: 22px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 28px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(74, 38, 50, 0.12), transparent 28%),
-    white;
+    radial-gradient(circle at 100% 0%, rgba(74, 38, 50, 0.18), transparent 28%),
+    #101010;
+  color: white;
 }
 
 .model-skin-preview {
@@ -736,18 +738,26 @@ select {
 
 .option-pill {
   min-height: 44px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  background: #f8f5ef;
-  color: var(--shop-ink);
+  background: #181818;
+  color: white;
   padding: 0 16px;
   cursor: pointer;
 }
 
 .option-pill.active {
-  border-color: var(--shop-ink);
-  background: var(--shop-ink);
-  color: white;
+  border-color: #f7f0e5;
+  background: #f7f0e5;
+  color: #111;
+}
+
+.option-pill.active .color-dot {
+  border-color: rgba(0, 0, 0, 0.24);
+}
+
+.option-pill:not(.active) .color-dot {
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 .wrap-grid {
@@ -762,10 +772,10 @@ select {
   align-content: space-between;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
-  background: #f8f5ef;
-  color: var(--shop-ink);
+  background: #161616;
+  color: white;
   text-align: left;
   cursor: pointer;
 }
@@ -782,7 +792,7 @@ select {
 }
 
 .wrap-card.active {
-  border-color: #111;
+  border-color: #f7f0e5;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
 }
 
@@ -805,10 +815,10 @@ select {
   grid-template-rows: 1fr auto;
   gap: 10px;
   padding: 10px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
-  background: #f8f5ef;
-  color: var(--shop-ink);
+  background: #161616;
+  color: white;
   cursor: pointer;
   text-align: left;
   overflow: hidden;
@@ -851,7 +861,7 @@ select {
 }
 
 .print-card.active {
-  border-color: #111;
+  border-color: #f7f0e5;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.14);
 }
 
@@ -941,8 +951,8 @@ select {
   display: grid;
   grid-template-rows: auto 1fr auto;
   min-height: 100vh;
-  background: #fbf8f2;
-  color: var(--shop-ink);
+  background: #080808;
+  color: white;
   box-shadow: -30px 0 90px rgba(0, 0, 0, 0.22);
 }
 
@@ -985,9 +995,9 @@ select {
   grid-template-columns: 72px 1fr;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
-  background: white;
+  background: #111;
 }
 
 .cart-item img {
@@ -1050,10 +1060,10 @@ select {
 .waitlist-form select {
   width: 100%;
   min-height: 48px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
-  background: white;
-  color: var(--shop-ink);
+  background: #121212;
+  color: white;
   padding: 0 14px;
 }
 
@@ -1068,7 +1078,7 @@ select {
   gap: 10px;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid var(--shop-line);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .btc-payment p {
@@ -1082,17 +1092,17 @@ select {
 
 .btc-payment a {
   overflow-wrap: anywhere;
-  color: var(--shop-ink);
+  color: #f7f0e5;
   font-size: 0.86rem;
 }
 
 .btc-payment input {
   width: 100%;
   min-height: 46px;
-  border: 1px solid var(--shop-line);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
-  background: white;
-  color: var(--shop-ink);
+  background: #121212;
+  color: white;
   padding: 0 14px;
 }
 

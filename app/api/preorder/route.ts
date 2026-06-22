@@ -30,6 +30,13 @@ export async function POST(request: Request) {
   const items = cleanItems(rawItems);
   const subtotal = typeof body?.subtotal === "number" ? Math.max(0, Math.floor(body.subtotal)) : 0;
   const walletAddress = typeof body?.walletAddress === "string" && body.walletAddress.trim() ? body.walletAddress.trim() : null;
+  const txHash = typeof body?.txHash === "string" && body.txHash.trim() ? body.txHash.trim() : null;
+  const paymentWallet = typeof body?.paymentWallet === "string" && body.paymentWallet.trim() ? body.paymentWallet.trim() : null;
+  const paymentAmountWei = typeof body?.paymentAmountWei === "string" && body.paymentAmountWei.trim() ? body.paymentAmountWei.trim() : null;
+  const paymentAmountUnits = typeof body?.paymentAmountUnits === "string" && body.paymentAmountUnits.trim() ? body.paymentAmountUnits.trim() : null;
+  const paymentChainId = typeof body?.paymentChainId === "string" && body.paymentChainId.trim() ? body.paymentChainId.trim() : null;
+  const paymentMethod = typeof body?.paymentMethod === "string" && body.paymentMethod.trim() ? body.paymentMethod.trim() : "email preorder";
+  const paymentAsset = typeof body?.paymentAsset === "string" && body.paymentAsset.trim() ? body.paymentAsset.trim().toLowerCase() : null;
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ message: "enter a valid email." }, { status: 400 });
@@ -54,7 +61,13 @@ export async function POST(request: Request) {
       email,
       wallet_address: walletAddress,
       subtotal,
-      status: "reserved",
+      status: paymentAsset === "bank_transfer" ? "bank_pending_confirmation" : txHash ? "paid_pending_confirmation" : "reserved",
+      payment_method: paymentMethod,
+      payment_asset: paymentAsset,
+      payment_wallet: paymentWallet,
+      payment_amount_wei: paymentAmountWei ?? paymentAmountUnits,
+      payment_chain_id: paymentChainId,
+      payment_tx_hash: txHash,
     })
     .select("id")
     .single();

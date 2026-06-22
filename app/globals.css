@@ -1063,6 +1063,39 @@ select {
   gap: 10px;
 }
 
+.btc-payment {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--shop-line);
+}
+
+.btc-payment p {
+  margin: 0;
+  color: var(--shop-muted);
+  font-size: 0.8rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+}
+
+.btc-payment a {
+  overflow-wrap: anywhere;
+  color: var(--shop-ink);
+  font-size: 0.86rem;
+}
+
+.btc-payment input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--shop-line);
+  border-radius: 16px;
+  background: white;
+  color: var(--shop-ink);
+  padding: 0 14px;
+}
+
 .waitlist-form {
   margin-top: 22px;
 }

@@ -11,12 +11,40 @@ declare global {
   }
 }
 
-const preorderWallet = process.env.NEXT_PUBLIC_PREORDER_WALLET ?? "";
+const preorderWallet = process.env.NEXT_PUBLIC_PREORDER_WALLET ?? "0x5B014E95ebA24F348528cBF8eE680f95a94cb64E";
+const preorderPaymentWei = process.env.NEXT_PUBLIC_PREORDER_PAYMENT_WEI ?? "";
+const preorderChainId = process.env.NEXT_PUBLIC_PREORDER_CHAIN_ID ?? "0x1";
+const preorderChainName = process.env.NEXT_PUBLIC_PREORDER_CHAIN_NAME ?? "ethereum";
+const usdtWallet = process.env.NEXT_PUBLIC_USDT_WALLET ?? preorderWallet;
+const usdtContract = process.env.NEXT_PUBLIC_USDT_CONTRACT ?? "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+const usdtAmountUnits = process.env.NEXT_PUBLIC_USDT_PREORDER_AMOUNT_UNITS ?? "";
+const usdtChainId = process.env.NEXT_PUBLIC_USDT_CHAIN_ID ?? "0x1";
+const btcWallet = process.env.NEXT_PUBLIC_BTC_WALLET ?? "bc1qun3s0pw5r3cura2fls04rex95jlcr88drz5rre";
+const bankName = process.env.NEXT_PUBLIC_BANK_NAME ?? "";
+const bankAccountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "";
+const bankAccountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? "";
+
+function isValidHexAddress(value: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test(value);
+}
+
+function toHexQuantity(value: string) {
+  return value.startsWith("0x") ? value : `0x${BigInt(value).toString(16)}`;
+}
+
+function encodeErc20Transfer(to: string, amountUnits: string) {
+  const methodId = "a9059cbb";
+  const paddedAddress = to.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+  const paddedAmount = BigInt(amountUnits).toString(16).padStart(64, "0");
+  return `0x${methodId}${paddedAddress}${paddedAmount}`;
+}
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal } = useCart();
   const [email, setEmail] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
+  const [btcTxHash, setBtcTxHash] = useState("");
+  const [bankReference, setBankReference] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -37,7 +65,15 @@ export function CartDrawer() {
     return null;
   }
 
-  async function reservePreorder() {
+  async function reservePreorder(payment?: {
+    txHash?: string;
+    paymentWallet?: string;
+    paymentAmountWei?: string;
+    paymentAmountUnits?: string;
+    paymentChainId?: string;
+    paymentMethod?: string;
+    paymentAsset?: string;
+  }) {
     setStatus("loading");
     setMessage("");
 
@@ -45,7 +81,7 @@ export function CartDrawer() {
       const response = await fetch("/api/preorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, items: orderSummary, subtotal, walletAddress }),
+        body: JSON.stringify({ email, items: orderSummary, subtotal, walletAddress, ...payment }),
       });
       const data = await response.json();
 
@@ -72,19 +108,225 @@ export function CartDrawer() {
     setWalletAddress(accounts[0] ?? "");
   }
 
-  async function startWalletPreorder() {
-    if (!preorderWallet) {
+  function validatePaymentStart() {
+    setStatus("loading");
+    setMessage("");
+
+    if (!items.length) {
       setStatus("error");
-      setMessage("wallet preorder is wired, but needs a launch wallet before taking funds.");
+      setMessage("add a product before starting wallet preorder.");
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus("error");
+      setMessage("enter a valid email before wallet preorder.");
+      return false;
+    }
+
+    if (!window.ethereum) {
+      setStatus("error");
+      setMessage("wallet not found. open this in trust wallet browser or install a wallet.");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function ensureWallet(chainId: string) {
+    if (!window.ethereum) {
+      throw new Error("wallet not found.");
+    }
+
+    const accounts = (await window.ethereum.request({ method: "eth_requestAccounts" })) as string[];
+    const from = accounts[0];
+
+    if (!from) {
+      throw new Error("wallet connection failed.");
+    }
+
+    setWalletAddress(from);
+
+    const currentChainId = (await window.ethereum.request({ method: "eth_chainId" })) as string;
+
+    if (chainId && currentChainId.toLowerCase() !== chainId.toLowerCase()) {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId }],
+      });
+    }
+
+    return from;
+  }
+
+  async function startWalletPreorder() {
+    if (!validatePaymentStart()) {
       return;
     }
 
-    if (!window.ethereum || !walletAddress) {
-      await connectWallet();
+    if (!preorderWallet || !isValidHexAddress(preorderWallet)) {
+      setStatus("error");
+      setMessage("add a valid eth receiving wallet before taking wallet payments.");
       return;
     }
 
-    setMessage("wallet payment request is ready for a configured launch wallet.");
+    if (!preorderPaymentWei || !/^0x[0-9a-fA-F]+$|^[0-9]+$/.test(preorderPaymentWei)) {
+      setStatus("error");
+      setMessage("add NEXT_PUBLIC_PREORDER_PAYMENT_WEI in vercel before taking eth payments.");
+      return;
+    }
+
+    try {
+      const from = await ensureWallet(preorderChainId);
+      const ethereum = window.ethereum;
+
+      if (!ethereum) {
+        throw new Error("wallet not found.");
+      }
+
+      const value = toHexQuantity(preorderPaymentWei);
+      const txHash = (await ethereum.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from,
+            to: preorderWallet,
+            value,
+          },
+        ],
+      })) as string;
+
+      await reservePreorder({
+        txHash,
+        paymentWallet: preorderWallet,
+        paymentAmountWei: preorderPaymentWei,
+        paymentChainId: preorderChainId || "wallet default",
+        paymentMethod: `native wallet payment on ${preorderChainName}`,
+        paymentAsset: "eth",
+      });
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "wallet preorder failed.");
+    }
+  }
+
+  async function startUsdtPreorder() {
+    if (!validatePaymentStart()) {
+      return;
+    }
+
+    if (!isValidHexAddress(usdtWallet) || !isValidHexAddress(usdtContract)) {
+      setStatus("error");
+      setMessage("add valid usdt wallet and token contract before taking usdt payments.");
+      return;
+    }
+
+    if (!usdtAmountUnits || !/^[0-9]+$/.test(usdtAmountUnits)) {
+      setStatus("error");
+      setMessage("add NEXT_PUBLIC_USDT_PREORDER_AMOUNT_UNITS before taking usdt payments.");
+      return;
+    }
+
+    try {
+      const from = await ensureWallet(usdtChainId);
+      const ethereum = window.ethereum;
+
+      if (!ethereum) {
+        throw new Error("wallet not found.");
+      }
+
+      const txHash = (await ethereum.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from,
+            to: usdtContract,
+            value: "0x0",
+            data: encodeErc20Transfer(usdtWallet, usdtAmountUnits),
+          },
+        ],
+      })) as string;
+
+      await reservePreorder({
+        txHash,
+        paymentWallet: usdtWallet,
+        paymentAmountUnits: usdtAmountUnits,
+        paymentChainId: usdtChainId,
+        paymentMethod: "erc20 usdt transfer",
+        paymentAsset: "usdt",
+      });
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "wallet preorder failed.");
+    }
+  }
+
+  async function reserveBtcPreorder() {
+    setStatus("loading");
+    setMessage("");
+
+    if (!items.length) {
+      setStatus("error");
+      setMessage("add a product before reserving btc preorder.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus("error");
+      setMessage("enter a valid email before btc preorder.");
+      return;
+    }
+
+    if (!btcTxHash.trim()) {
+      setStatus("error");
+      setMessage("paste the btc transaction id after sending payment.");
+      return;
+    }
+
+    await reservePreorder({
+      txHash: btcTxHash.trim(),
+      paymentWallet: btcWallet,
+      paymentChainId: "bitcoin",
+      paymentMethod: "btc transfer",
+      paymentAsset: "btc",
+    });
+  }
+
+  async function reserveBankPreorder() {
+    setStatus("loading");
+    setMessage("");
+
+    if (!items.length) {
+      setStatus("error");
+      setMessage("add a product before reserving bank transfer.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus("error");
+      setMessage("enter a valid email before bank transfer.");
+      return;
+    }
+
+    if (!bankName || !bankAccountName || !bankAccountNumber) {
+      setStatus("error");
+      setMessage("add bank details in vercel before taking bank transfers.");
+      return;
+    }
+
+    if (!bankReference.trim()) {
+      setStatus("error");
+      setMessage("enter sender name or transfer reference after payment.");
+      return;
+    }
+
+    await reservePreorder({
+      txHash: bankReference.trim(),
+      paymentWallet: `${bankName} / ${bankAccountNumber}`,
+      paymentChainId: "bank",
+      paymentMethod: "bank transfer",
+      paymentAsset: "bank_transfer",
+    });
   }
 
   return (
@@ -142,14 +384,51 @@ export function CartDrawer() {
             <input type="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <div className="checkout-actions">
-            <button className="shop-button" type="button" onClick={reservePreorder} disabled={!items.length || status === "loading"}>
+            <button className="shop-button" type="button" onClick={() => reservePreorder()} disabled={!items.length || status === "loading"}>
               reserve preorder
             </button>
             <button className="shop-button secondary" type="button" onClick={connectWallet}>
               {walletAddress ? "wallet connected" : "connect wallet"}
             </button>
             <button className="shop-button secondary" type="button" onClick={startWalletPreorder} disabled={!items.length}>
-              web3 preorder
+              pay eth
+            </button>
+            <button className="shop-button secondary" type="button" onClick={startUsdtPreorder} disabled={!items.length}>
+              pay usdt
+            </button>
+          </div>
+          <div className="btc-payment">
+            <p>btc address</p>
+            <a href={`bitcoin:${btcWallet}`}>{btcWallet}</a>
+            <input
+              type="text"
+              placeholder="paste btc transaction id"
+              value={btcTxHash}
+              onChange={(event) => setBtcTxHash(event.target.value)}
+            />
+            <button className="shop-button secondary" type="button" onClick={reserveBtcPreorder} disabled={!items.length}>
+              save btc preorder
+            </button>
+          </div>
+          <div className="btc-payment">
+            <p>bank transfer</p>
+            {bankName && bankAccountName && bankAccountNumber ? (
+              <>
+                <strong>{bankName}</strong>
+                <span>{bankAccountName}</span>
+                <span>{bankAccountNumber}</span>
+              </>
+            ) : (
+              <span>bank details not configured yet</span>
+            )}
+            <input
+              type="text"
+              placeholder="sender name or transfer reference"
+              value={bankReference}
+              onChange={(event) => setBankReference(event.target.value)}
+            />
+            <button className="shop-button secondary" type="button" onClick={reserveBankPreorder} disabled={!items.length}>
+              save bank preorder
             </button>
           </div>
           {message ? <p className={`waitlist-message ${status}`}>{message}</p> : null}

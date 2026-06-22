@@ -82,6 +82,9 @@ export function CartDrawer() {
 
   const ethAmountWei = useMemo(() => toTokenUnits(preorderAmountNaira, nairaPerEth, 18), [preorderAmountNaira]);
   const usdtAmountUnits = useMemo(() => toTokenUnits(preorderAmountNaira, nairaPerUsdt, 6), [preorderAmountNaira]);
+  const canPayEth = Boolean(items.length && ethAmountWei && preorderWallet && isValidHexAddress(preorderWallet));
+  const canPayUsdt = Boolean(items.length && usdtAmountUnits && isValidHexAddress(usdtWallet) && isValidHexAddress(usdtContract));
+  const canUseBank = Boolean(items.length && bankName && bankAccountName && bankAccountNumber);
 
   if (!isOpen) {
     return null;
@@ -112,7 +115,7 @@ export function CartDrawer() {
       }
 
       setStatus("success");
-      setMessage(`preorder reserved: ${data.reference}`);
+      setMessage(payment?.paymentAsset ? `payment preorder saved: ${data.reference}` : `preorder reserved: ${data.reference}`);
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "could not reserve preorder.");
@@ -426,18 +429,19 @@ export function CartDrawer() {
           </label>
           <div className="checkout-actions">
             <button className="shop-button" type="button" onClick={() => reservePreorder()} disabled={!items.length || status === "loading"}>
-              reserve preorder
+              {status === "loading" ? "saving..." : "reserve preorder"}
             </button>
             <button className="shop-button secondary" type="button" onClick={connectWallet}>
               {walletAddress ? "wallet connected" : "connect wallet"}
             </button>
-            <button className="shop-button secondary" type="button" onClick={startWalletPreorder} disabled={!items.length}>
-              pay eth
+            <button className="shop-button secondary" type="button" onClick={startWalletPreorder} disabled={!canPayEth || status === "loading"}>
+              {ethAmountWei ? "pay eth" : "set eth rate"}
             </button>
-            <button className="shop-button secondary" type="button" onClick={startUsdtPreorder} disabled={!items.length}>
-              pay usdt
+            <button className="shop-button secondary" type="button" onClick={startUsdtPreorder} disabled={!canPayUsdt || status === "loading"}>
+              {usdtAmountUnits ? "pay usdt" : "set usdt rate"}
             </button>
           </div>
+          {message ? <p className={`waitlist-message cart-message ${status}`}>{message}</p> : null}
           <div className="btc-payment">
             <p>btc address</p>
             <a href={`bitcoin:${btcWallet}`}>{btcWallet}</a>
@@ -447,7 +451,7 @@ export function CartDrawer() {
               value={btcTxHash}
               onChange={(event) => setBtcTxHash(event.target.value)}
             />
-            <button className="shop-button secondary" type="button" onClick={reserveBtcPreorder} disabled={!items.length}>
+            <button className="shop-button secondary" type="button" onClick={reserveBtcPreorder} disabled={!items.length || status === "loading"}>
               save btc preorder
             </button>
           </div>
@@ -468,11 +472,10 @@ export function CartDrawer() {
               value={bankReference}
               onChange={(event) => setBankReference(event.target.value)}
             />
-            <button className="shop-button secondary" type="button" onClick={reserveBankPreorder} disabled={!items.length}>
-              save bank preorder
+            <button className="shop-button secondary" type="button" onClick={reserveBankPreorder} disabled={!canUseBank || status === "loading"}>
+              {canUseBank ? "save bank preorder" : "set bank details"}
             </button>
           </div>
-          {message ? <p className={`waitlist-message ${status}`}>{message}</p> : null}
         </div>
       </aside>
     </div>

@@ -23,7 +23,22 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ message: "could not save waitlist request." }, { status: 500 });
+    console.error("waitlist insert failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    if (error.code === "42P01") {
+      return NextResponse.json({ message: "waitlist table is missing. run the supabase sql setup." }, { status: 500 });
+    }
+
+    if (error.code === "42501") {
+      return NextResponse.json({ message: "database permission blocked. check the supabase secret key in vercel." }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: `could not save waitlist request. database code: ${error.code ?? "unknown"}` }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

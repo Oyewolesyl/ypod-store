@@ -65,7 +65,7 @@ export default function ShopPage() {
             <p className="section-kicker">preorder</p>
             <h2 id="payment-title">reserve the system before checkout goes live.</h2>
             <p>
-              collect real preorder interest now. wallet payment is prepared, but guarded until the receiving wallet and launch terms are configured.
+              collect real preorder interest, cart records, and full-payment references for bank transfer, btc, eth, and usdt.
             </p>
             <WaitlistForm />
           </div>

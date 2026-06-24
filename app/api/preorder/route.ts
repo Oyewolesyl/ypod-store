@@ -77,7 +77,22 @@ export async function POST(request: Request) {
     .single();
 
   if (preorderError || !preorder?.id) {
-    return NextResponse.json({ message: "could not reserve preorder." }, { status: 500 });
+    console.error("preorder insert failed", {
+      code: preorderError?.code,
+      message: preorderError?.message,
+      details: preorderError?.details,
+      hint: preorderError?.hint,
+    });
+
+    if (preorderError?.code === "42P01") {
+      return NextResponse.json({ message: "preorders table is missing. run the supabase sql setup." }, { status: 500 });
+    }
+
+    if (preorderError?.code === "42501") {
+      return NextResponse.json({ message: "database permission blocked. check the supabase secret key in vercel." }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: `could not reserve preorder. database code: ${preorderError?.code ?? "unknown"}` }, { status: 500 });
   }
 
   const { error: itemError } = await supabase.from("preorder_items").insert(
@@ -88,8 +103,15 @@ export async function POST(request: Request) {
   );
 
   if (itemError) {
+    console.error("preorder items insert failed", {
+      code: itemError.code,
+      message: itemError.message,
+      details: itemError.details,
+      hint: itemError.hint,
+    });
+
     await supabase.from("preorders").delete().eq("id", preorder.id);
-    return NextResponse.json({ message: "could not save preorder items." }, { status: 500 });
+    return NextResponse.json({ message: `could not save preorder items. database code: ${itemError.code ?? "unknown"}` }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, reference });

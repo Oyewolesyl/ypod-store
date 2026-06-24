@@ -21,8 +21,6 @@ const btcWallet = process.env.NEXT_PUBLIC_BTC_WALLET ?? "bc1qun3s0pw5r3cura2fls0
 const bankName = process.env.NEXT_PUBLIC_BANK_NAME ?? "";
 const bankAccountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "";
 const bankAccountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? "";
-const preorderPaymentMode = process.env.NEXT_PUBLIC_PREORDER_PAYMENT_MODE ?? "full";
-const preorderDepositNaira = Number(process.env.NEXT_PUBLIC_PREORDER_DEPOSIT_NAIRA ?? "0");
 const nairaPerEth = Number(process.env.NEXT_PUBLIC_NAIRA_PER_ETH ?? "0");
 const nairaPerUsdt = Number(process.env.NEXT_PUBLIC_NAIRA_PER_USDT ?? "0");
 
@@ -72,16 +70,8 @@ export function CartDrawer() {
     [items],
   );
 
-  const preorderAmountNaira = useMemo(() => {
-    if (preorderPaymentMode === "deposit" && Number.isFinite(preorderDepositNaira) && preorderDepositNaira > 0) {
-      return Math.min(subtotal, preorderDepositNaira);
-    }
-
-    return subtotal;
-  }, [subtotal]);
-
-  const ethAmountWei = useMemo(() => toTokenUnits(preorderAmountNaira, nairaPerEth, 18), [preorderAmountNaira]);
-  const usdtAmountUnits = useMemo(() => toTokenUnits(preorderAmountNaira, nairaPerUsdt, 6), [preorderAmountNaira]);
+  const ethAmountWei = useMemo(() => toTokenUnits(subtotal, nairaPerEth, 18), [subtotal]);
+  const usdtAmountUnits = useMemo(() => toTokenUnits(subtotal, nairaPerUsdt, 6), [subtotal]);
   const canPayEth = Boolean(items.length && ethAmountWei && preorderWallet && isValidHexAddress(preorderWallet));
   const canPayUsdt = Boolean(items.length && usdtAmountUnits && isValidHexAddress(usdtWallet) && isValidHexAddress(usdtContract));
   const canUseBank = Boolean(items.length && bankName && bankAccountName && bankAccountNumber);
@@ -348,7 +338,7 @@ export function CartDrawer() {
     await reservePreorder({
       txHash: bankReference.trim(),
       paymentWallet: `${bankName} / ${bankAccountNumber}`,
-      paymentAmountUnits: preorderAmountNaira.toString(),
+      paymentAmountUnits: subtotal.toString(),
       paymentChainId: "bank",
       paymentMethod: "bank transfer",
       paymentAsset: "bank_transfer",
@@ -402,15 +392,9 @@ export function CartDrawer() {
 
         <div className="cart-footer">
           <div className="subtotal-row">
-            <span>{preorderPaymentMode === "deposit" ? "deposit due" : "subtotal"}</span>
-            <span>{formatNaira(preorderAmountNaira)}</span>
+            <span>amount due</span>
+            <span>{formatNaira(subtotal)}</span>
           </div>
-          {preorderPaymentMode === "deposit" ? (
-            <div className="subtotal-row secondary-row">
-              <span>cart total</span>
-              <span>{formatNaira(subtotal)}</span>
-            </div>
-          ) : null}
           <div className="subtotal-row secondary-row">
             <span>eth estimate</span>
             <span>{ethAmountWei ? `${ethAmountWei} wei` : "rate needed"}</span>
@@ -420,7 +404,7 @@ export function CartDrawer() {
             <span>{usdtAmountUnits ? `${usdtAmountUnits} units` : "rate needed"}</span>
           </div>
           <div className="subtotal-row secondary-row">
-            <span>cart total</span>
+            <span>full payment total</span>
             <span>{formatNaira(subtotal)}</span>
           </div>
           <label className="checkout-field">

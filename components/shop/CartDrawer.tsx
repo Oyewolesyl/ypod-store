@@ -347,7 +347,7 @@ export function CartDrawer() {
 
     await reservePreorder({
       txHash: bankReference.trim(),
-          paymentWallet: `${bankName} / ${bankAccountNumber}`,
+      paymentWallet: `${bankName} / ${bankAccountNumber}`,
       paymentAmountUnits: preorderAmountNaira.toString(),
       paymentChainId: "bank",
       paymentMethod: "bank transfer",
@@ -427,24 +427,61 @@ export function CartDrawer() {
             email for preorder
             <input type="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
-          <div className="checkout-actions">
-            <button className="shop-button" type="button" onClick={() => reservePreorder()} disabled={!items.length || status === "loading"}>
-              {status === "loading" ? "saving..." : "reserve preorder"}
+          <section className="payment-panel primary-payment" aria-label="bank transfer payment">
+            <div>
+              <p className="payment-panel-label">bank transfer</p>
+              <h3>pay by bank transfer</h3>
+              <p className="payment-panel-copy">send the amount due to the account below, then enter the sender name or transfer reference.</p>
+            </div>
+            {bankName && bankAccountName && bankAccountNumber ? (
+              <div className="bank-details">
+                <span>{bankName}</span>
+                <strong>{bankAccountNumber}</strong>
+                <span>{bankAccountName}</span>
+              </div>
+            ) : (
+              <div className="bank-details muted-bank">
+                <span>bank details not configured</span>
+                <strong>set bank env vars in vercel</strong>
+              </div>
+            )}
+            <input
+              type="text"
+              placeholder="sender name or transfer reference"
+              value={bankReference}
+              onChange={(event) => setBankReference(event.target.value)}
+            />
+            <button className="shop-button" type="button" onClick={reserveBankPreorder} disabled={!canUseBank || status === "loading"}>
+              {canUseBank ? "save bank preorder" : "set bank details"}
             </button>
-            <button className="shop-button secondary" type="button" onClick={connectWallet}>
-              {walletAddress ? "wallet connected" : "connect wallet"}
-            </button>
-            <button className="shop-button secondary" type="button" onClick={startWalletPreorder} disabled={!canPayEth || status === "loading"}>
-              {ethAmountWei ? "pay eth" : "set eth rate"}
-            </button>
-            <button className="shop-button secondary" type="button" onClick={startUsdtPreorder} disabled={!canPayUsdt || status === "loading"}>
-              {usdtAmountUnits ? "pay usdt" : "set usdt rate"}
-            </button>
-          </div>
-          {message ? <p className={`waitlist-message cart-message ${status}`}>{message}</p> : null}
-          <div className="btc-payment">
-            <p>btc address</p>
-            <a href={`bitcoin:${btcWallet}`}>{btcWallet}</a>
+          </section>
+
+          <section className="payment-panel" aria-label="wallet payment">
+            <div>
+              <p className="payment-panel-label">wallet</p>
+              <h3>pay with eth or usdt</h3>
+              <p className="payment-panel-copy">open in trust wallet browser or use a browser wallet. the transaction hash is saved with the preorder.</p>
+            </div>
+            <div className="checkout-actions">
+              <button className="shop-button secondary" type="button" onClick={connectWallet}>
+                {walletAddress ? "wallet connected" : "connect wallet"}
+              </button>
+              <button className="shop-button secondary" type="button" onClick={startWalletPreorder} disabled={!canPayEth || status === "loading"}>
+                {ethAmountWei ? "pay eth" : "set eth rate"}
+              </button>
+              <button className="shop-button secondary" type="button" onClick={startUsdtPreorder} disabled={!canPayUsdt || status === "loading"}>
+                {usdtAmountUnits ? "pay usdt" : "set usdt rate"}
+              </button>
+            </div>
+          </section>
+
+          <section className="payment-panel" aria-label="bitcoin transfer payment">
+            <div>
+              <p className="payment-panel-label">bitcoin</p>
+              <h3>pay with btc</h3>
+              <p className="payment-panel-copy">send btc to the address, then paste the transaction id so the preorder can be confirmed.</p>
+            </div>
+            <a className="wallet-address" href={`bitcoin:${btcWallet}`}>{btcWallet}</a>
             <input
               type="text"
               placeholder="paste btc transaction id"
@@ -454,28 +491,14 @@ export function CartDrawer() {
             <button className="shop-button secondary" type="button" onClick={reserveBtcPreorder} disabled={!items.length || status === "loading"}>
               save btc preorder
             </button>
-          </div>
-          <div className="btc-payment">
-            <p>bank transfer</p>
-            {bankName && bankAccountName && bankAccountNumber ? (
-              <>
-                <strong>{bankName}</strong>
-                <span>{bankAccountName}</span>
-                <span>{bankAccountNumber}</span>
-              </>
-            ) : (
-              <span>bank details not configured yet</span>
-            )}
-            <input
-              type="text"
-              placeholder="sender name or transfer reference"
-              value={bankReference}
-              onChange={(event) => setBankReference(event.target.value)}
-            />
-            <button className="shop-button secondary" type="button" onClick={reserveBankPreorder} disabled={!canUseBank || status === "loading"}>
-              {canUseBank ? "save bank preorder" : "set bank details"}
+          </section>
+
+          <div className="checkout-actions reserve-only">
+            <button className="shop-button" type="button" onClick={() => reservePreorder()} disabled={!items.length || status === "loading"}>
+              {status === "loading" ? "saving..." : "reserve preorder"}
             </button>
           </div>
+          {message ? <p className={`waitlist-message cart-message ${status}`}>{message}</p> : null}
         </div>
       </aside>
     </div>

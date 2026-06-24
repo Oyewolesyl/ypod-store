@@ -190,7 +190,7 @@ export const products: Product[] = [
       },
       {
         question: "is checkout live?",
-        answer: "not yet. payments stay paused until inventory, shipping, support, and launch terms are ready.",
+        answer: "the store supports preorder reservation and payment references while final production, shipping, and support terms are confirmed.",
       },
     ],
   },
